@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build output
+dist/
+build/
+out/
+*.app/
+*.dmg
+*.exe
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# Temporary files
+_electron.zip
+_electron_extracted/
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node
+*.js.map
+coverage/
+.nyc_output/
+
+# Electron builder
+electron-builder*
+
+# 注意：用户数据存储在 ~/.manju-maker/ 目录（系统目录），不会提交到仓库

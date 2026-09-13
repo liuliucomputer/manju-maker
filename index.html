@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>漫剧制作</title>
+  <style>
+    :root {
+      --bg-primary:   #0d0d0d;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary:  #252525;
+      --bg-card:      #1e1e1e;
+      --border:       #333333;
+      --border-hover: #555555;
+      --text-primary: #e8e8e8;
+      --text-secondary: #a0a0a0;
+      --text-muted:   #666666;
+      --accent:       #e63946;
+      --accent-hover: #ff4d5a;
+      --accent-dim:   rgba(230, 57, 70, 0.15);
+      --success:      #2ecc71;
+      --warning:      #f39c12;
+      --radius:       8px;
+      --radius-lg:    12px;
+      --shadow:       0 4px 24px rgba(0,0,0,0.6);
+      --transition:   0.2s ease;
+    }
+    [data-theme="light"] {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e8e8e8;
+      --bg-card: #ffffff;
+      --border: #d0d0d0;
+      --border-hover: #b0b0b0;
+      --text-primary: #1a1a1a;
+      --text-secondary: #666666;
+      --text-muted: #999999;
+      --accent-dim: rgba(230, 57, 70, 0.1);
+      --shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      height: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      font-size: 14px;
+      overflow: hidden;
+    }
+    .topbar {
+      height: 48px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+    .topbar .logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+    .topbar .logo span { color: var(--text-primary); }
+    .mode-tabs {
+      display: flex;
+      gap: 4px;
+      margin-left: 32px;
+      -webkit-app-region: no-drag;
+    }
+    .mode-tab {
+      padding: 6px 18px;
+      border-radius: 20px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all var(--transition);
+    }
+    .mode-tab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+    .mode-tab.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .main {
+      display: flex;
+      height: calc(100vh - 48px);
+    }
+    .sidebar {
+      width: 260px;
+      min-width: 200px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sidebar-header h3 {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .story-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .story-item {
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: background var(--transition);
+    }
+    .story-item:hover { background: var(--bg-tertiary); }
+    .story-item.active { background: var(--accent-dim); border: 1px solid var(--accent); }
+    .story-item .title {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .story-item .meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .toolbar {
+      height: 44px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+    .btn {
+      padding: 6px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { border-color: var(--border-hover); background: #2e2e2e; }
+    .btn-accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .toolbar-spacer { flex: 1; }
+    .status-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+    }
+    .status-badge.processing { background: rgba(243,156,18,0.2); color: var(--warning); }
+    .status-badge.done       { background: rgba(46,204,113,0.2);  color: var(--success); }
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .input-panel {
+      width: 340px;
+      min-width: 260px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .input-area {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    textarea, .text-input {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: none;
+      font-family: inherit;
+      transition: border-color var(--transition);
+    }
+    textarea:focus, .text-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    textarea::placeholder, .text-input::placeholder { color: var(--text-muted); }
+    .storyboard-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .storyboard-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sb-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .sb-item:hover { border-color: var(--border-hover); }
+    .sb-item.processing { border-color: var(--warning); }
+    .sb-item.done       { border-color: var(--success); }
+    .sb-item.error      { border-color: var(--accent); }
+    .sb-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      gap: 8px;
+    }
+    .sb-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sb-title {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+    }
+    .sb-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: var(--bg-primary);
+      color: var(--text-muted);
+    }
+    .sb-body {
+      padding: 10px 12px;
+    }
+    .sb-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .sb-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+    }
+    .sb-video {
+      width: 100%;
+      margin-top: 8px;
+      border-radius: var(--radius);
+      background: var(--bg-primary);
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      border: 1px dashed var(--border);
+    }
+    .sb-video img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: var(--radius);
+    }
+    .preview-panel {
+      width: 320px;
+      min-width: 240px;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-area {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-placeholder {
+      color: var(--text-muted);
+      text-align: center;
+      font-size: 13px;
+    }
+    .preview-placeholder .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+    .preview-media {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .settings-row label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 60px;
+    }
+    .settings-row input, .settings-row select {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    .settings-row input:focus, .settings-row select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 12px;
+    }
+    .empty-state .icon { font-size: 56px; opacity: 0.2; }
+    .empty-state p { font-size: 13px; }
+    .progress-bar {
+      width: 100%;
+      height: 3px;
+      background: var(--bg-primary);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .pulse { animation: pulse 1.5s infinite; }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 13px;
+      box-shadow: var(--shadow);
+      animation: slideIn 0.3s ease;
+      max-width: 320px;
+    }
+    .toast.success { border-color: var(--success); background: rgba(46,204,113,0.1); }
+    .toast.error   { border-color: var(--accent);   background: rgba(230,57,70,0.1); }
+    .toast.info    { border-color: #3498db;        background: rgba(52,152,219,0.1); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">🦞 漫剧<span>制作</span></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="script" onclick="switchMode('script')">📜 剧本模式</button>
+    <button class="mode-tab"        data-mode="novel"  onclick="switchMode('novel')">📖 小说模式</button>
+  </div>
+  <div class="toolbar-spacer"></div>
+  <button class="btn btn-sm" id="themeBtn" onclick="toggleTheme()">🌙 深色</button>
+  <button class="btn btn-sm" onclick="openSettings()">⚙️ 设置</button>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>我的作品</h3>
+      <button class="btn btn-sm" onclick="createNewStory()">+ 新建</button>
+    </div>
+    <div class="story-list" id="storyList"></div>
+  </div>
+
+  <div class="content">
+    <div class="toolbar">
+      <button class="btn btn-sm" onclick="loadFromFile()">📂 导入</button>
+      <button class="btn btn-sm" onclick="saveProject()">💾 保存</button>
+      <div class="toolbar-spacer"></div>
+      <span class="status-badge" id="globalStatus">就绪</span>
+      <button class="btn btn-accent btn-sm" id="generateBtn" onclick="startGeneration()">▶ 开始生成</button>
+    </div>
+
+    <div class="workspace">
+      <div class="input-panel">
+        <div class="panel-header" id="inputPanelTitle">剧本输入</div>
+        <div class="input-area">
+          <textarea id="inputText"
+            placeholder="在此粘贴剧本内容…&#10;&#10;剧本模式：输入场景、对话、动作描述&#10;小说模式：输入小说正文"
+            oninput="onInputChange()"></textarea>
+        </div>
+      </div>
+
+      <div class="storyboard-panel">
+        <div class="panel-header">
+          分镜序列
+          <span id="sbCount" style="float:right;color:var(--text-muted);font-weight:400;">0 个分镜</span>
+        </div>
+        <div class="storyboard-list" id="storyboardList">
+          <div class="empty-state">
+            <div class="icon">🎬</div>
+            <p>输入剧本后点击"开始生成"</p>
+            <p style="font-size:12px;">AI 将自动拆解分镜并制作视频（每镜 1~2 秒）</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-panel">
+        <div class="panel-header">预览</div>
+        <div class="preview-area" id="previewArea">
+          <div class="preview-placeholder">
+            <div class="icon">🎞️</div>
+            <p>选中分镜查看预览</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  const { ipcRenderer } = require('electron');
+  window.electronAPI = {
+    callLlm: (args) => ipcRenderer.invoke('call-llm', args),
+    readFile: () => ipcRenderer.invoke('read-file'),
+    saveFile: (args) => ipcRenderer.invoke('save-file', args),
+    saveApiConfig: (config) => ipcRenderer.invoke('save-api-config', config),
+    generateVideo: (args) => ipcRenderer.invoke('generate-video', args),
+    loadProjects: () => ipcRenderer.invoke('load-projects'),
+    saveProjects: (projects) => ipcRenderer.invoke('save-projects', projects),
+    loadTheme: () => ipcRenderer.invoke('load-theme'),
+    saveTheme: (theme) => ipcRenderer.invoke('save-theme', theme),
+  };
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  全局状态
+// ═══════════════════════════════════════════════════════════════
+let currentMode  = 'script';
+let projects     = [];
+let activeProjectIdx = 0;
+
+let API_CONFIG = {
+  endpoint: 'https://api.agnes-ai.cn/v1',
+  apiKey: 'sk-C0BS2BvYhjqnWy4k0wuq87QGYddR1cWb6NuxfWwKlkHDrosK',
+  textModel: 'agnes-2.5-flash',
+  videoModel: 'agnes-video-v2.0',
+};
+
+function loadApiSettings() {
+  const saved = localStorage.getItem('manjumaker_api');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      API_CONFIG = { ...API_CONFIG, ...parsed };
+    } catch(e) {}
+  }
+}
+
+async function saveApiSettings() {
+  localStorage.setItem('manjumaker_api', JSON.stringify(API_CONFIG));
+  try {
+    await window.electronAPI.saveApiConfig(API_CONFIG);
+  } catch(e) {
+    console.log('主进程保存失败', e);
+  }
+}
+
+async function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme') || 'dark';
+  await setThemeAsync(current === 'dark' ? 'light' : 'dark');
+}
+
+async function setThemeAsync(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('manjumaker_theme', theme);
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = theme === 'dark' ? '🌙 深色' : '☀️ 浅色';
+  try {
+    await window.electronAPI.saveTheme(theme);
+  } catch(e) {
+    console.log('主题保存失败（可能为测试环境）', e);
+  }
+}
+
+async function initTheme() {
+  try {
+    const result = await window.electronAPI.loadTheme();
+    if (result.success) {
+      await setThemeAsync(result.theme);
+    } else {
+      const saved = localStorage.getItem('manjumaker_theme') || 'dark';
+      await setThemeAsync(saved);
+    }
+  } catch(e) {
+    const saved = localStorage.getItem('manjumaker_theme') || 'dark';
+    await setThemeAsync(saved);
+  }
+}
+
+const defaultProject = () => ({
+  id: Date.now(),
+  title: '新项目',
+  mode: 'script',
+  input: '',
+  scenes: [],
+  settings: {},
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+function init() {
+  initTheme();
+  loadApiSettings();
+  loadFromStorage();
+  if (projects.length === 0) projects.push(defaultProject());
+  renderStoryList();
+  switchMode(currentMode);
+}
+
+async function loadFromStorage() {
+  try {
+    const result = await window.electronAPI.loadProjects();
+    if (result.success && result.projects) {
+      projects = result.projects;
+    }
+  } catch(e) {
+    console.error('加载项目失败:', e);
+  }
+}
+async function persist() {
+  try {
+    await window.electronAPI.saveProjects(projects);
+  } catch(e) {
+    console.error('保存项目失败:', e);
+  }
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.mode === mode);
+  });
+  const title = mode === 'script' ? '剧本输入' : '小说输入';
+  document.getElementById('inputPanelTitle').textContent = title;
+  document.getElementById('inputText').placeholder =
+    mode === 'script'
+      ? '在此粘贴剧本内容…\n\n剧本模式：输入场景、对话、动作描述'
+      : '在此粘贴小说正文…\n\n小说模式：AI 将自动识别章节和场景';
+  updateGlobalStatus('就绪');
+}
+
+function createNewStory() {
+  const p = defaultProject();
+  p.mode = currentMode;
+  projects.unshift(p);
+  activeProjectIdx = 0;
+  persist();
+  renderStoryList();
+  renderStoryboard();
+  document.getElementById('inputText').value = '';
+  toast('已创建新作品', 'info');
+}
+
+function selectStory(idx) {
+  saveCurrentInput();
+  activeProjectIdx = idx;
+  const p = projects[idx];
+  renderStoryList();
+  document.getElementById('inputText').value = p.input;
+  renderStoryboard();
+}
+
+function saveCurrentInput() {
+  const p = projects[activeProjectIdx];
+  if (!p) return;
+  p.input = document.getElementById('inputText').value;
+  p.updatedAt = new Date().toISOString();
+  persist();
+}
+
+function onInputChange() {
+  const p = projects[activeProjectIdx];
+  if (p) p.input = document.getElementById('inputText').value;
+}
+
+function renderStoryList() {
+  const el = document.getElementById('storyList');
+  el.innerHTML = projects.map((p, i) => `
+    <div class="story-item ${i === activeProjectIdx ? 'active' : ''}" onclick="selectStory(${i})">
+      <div class="title">${escHtml(p.title)}</div>
+      <div class="meta">${p.mode === 'script' ? '📜' : '📖'} ${p.scenes.length} 个分镜 · ${fmtDate(p.updatedAt)}</div>
+    </div>
+  `).join('');
+}
+
+function renderStoryboard() {
+  const p = projects[activeProjectIdx];
+  if (!p) return;
+  const el = document.getElementById('storyboardList');
+  document.getElementById('sbCount').textContent = `${p.scenes.length} 个分镜`;
+
+  if (p.scenes.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🎬</div>
+        <p>输入剧本后点击"开始生成"</p>
+        <p style="font-size:12px;">AI 将自动拆解分镜并制作视频（每镜 1~2 秒）</p>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = p.scenes.map((s, i) => `
+    <div class="sb-item ${s.status}" id="sb-${i}" onclick="previewScene(${i})">
+      <div class="sb-header">
+        <div class="sb-num">${i + 1}</div>
+        <div class="sb-title">${escHtml(s.title || '分镜 ' + (i+1))}</div>
+        <div class="sb-status">${statusLabel(s.status)}</div>
+      </div>
+      <div class="sb-body">
+        <div class="sb-desc">${escHtml(s.description || '')}</div>
+        <div class="sb-actions">
+          ${s.status === 'pending' || s.status === 'error' ? `<button class="btn btn-sm btn-accent" onclick="event.stopPropagation(); generateSingle(${i})">▶ 生成</button>` : ''}
+          ${s.status === 'processing' ? `<button class="btn btn-sm" disabled><span class="spinner"></span> 生成中…</button>` : ''}
+          ${s.status === 'done' ? `<button class="btn btn-sm" onclick="event.stopPropagation(); previewScene(${i})">👁 预览</button>` : ''}
+          <button class="btn btn-sm" onclick="event.stopPropagation(); deleteScene(${i})">✕ 删除</button>
+        </div>
+        ${s.status === 'processing' ? `<div class="progress-bar"><div class="fill" style="width:60%"></div></div>` : ''}
+        ${s.videoUrl ? `<div class="sb-video"><img src="${escHtml(s.videoUrl)}" alt="preview" /></div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function previewScene(idx) {
+  const s = projects[activeProjectIdx].scenes[idx];
+  const el = document.getElementById('previewArea');
+  if (s && s.videoUrl) {
+    el.innerHTML = `<video class="preview-media" src="${escHtml(s.videoUrl)}" controls></video>`;
+  } else {
+    el.innerHTML = `<div class="preview-placeholder"><div class="icon">🎞️</div><p>选中分镜查看预览</p></div>`;
+  }
+}
+
+async function callLLM(model, messages, maxTokens = 4096) {
+  const resp = await window.electronAPI.callLlm({ model, messages, maxTokens });
+  if (resp.error) throw new Error(resp.error);
+  return resp;
+}
+
+async function extractScenes(inputText, mode) {
+  const systemPrompt = mode === 'script'
+    ? `你是专业漫剧编剧。将剧本拆解为独立分镜，每个分镜是1~2秒的短视频片段。输出JSON数组，包含：title(标题), description(画面描述)`
+    : `你是专业漫剧改编师。从小说中提取关键场景，每个分镜是1~2秒的短视频片段。输出JSON数组，包含：title(标题), description(画面描述)`;
+
+  const userPrompt = mode === 'script'
+    ? `请将以下剧本拆解为多个分镜（每镜1~2秒）：\n\n${inputText}`
+    : `第一章，请作为漫剧制作博主，将这段内容改写成适配漫剧呈现的剧本，核心要求如下：1．开头必须打破常规认知、走反常识路线，快速抓住观众眼球，贴合漫剧强吸睛的传播特点；2. 剧本逻辑清晰连贯，情节衔接自然，符合漫剧分镜、台词、场景的呈现逻辑；3．整体内容需与原文形成明显区别，避免照搬原文句式和叙事节奏，结合漫剧的镜头感、台词张力进行重构；4．剧本适配漫剧创作场景，台词简洁有记忆点，场景描述精准，便于后续分镜绘制和拍摄呈现。\n\n${inputText}`;
+
+  const resp = await callLLM(API_CONFIG.textModel, [
+    { role: 'system', content: systemPrompt },
+    { role: 'user',   content: userPrompt },
+  ], 8192);
+
+  const content = resp.choices?.[0]?.message?.content || '[]';
+  let scenes;
+  try {
+    scenes = JSON.parse(content);
+  } catch {
+    const match = content.match(/\[[\s\S]*\]/);
+    scenes = match ? JSON.parse(match[0]) : [];
+  }
+
+  return scenes.map((s, i) => ({
+    num:       i + 1,
+    title:     s.title || s.scene || `分镜 ${i+1}`,
+    description: s.description || s.content || '',
+    prompt:    `漫剧风格短视频，${s.description || ''}`,
+    status:    'pending',
+    videoUrl:  null,
+  }));
+}
+
+async function generateSceneVideo(scene) {
+  const resp = await window.electronAPI.generateVideo({ prompt: scene.prompt });
+  if (resp.error) throw new Error(resp.error);
+  return resp.videoUrl || resp.url || null;
+}
+
+async function startGeneration() {
+  const p = projects[activeProjectIdx];
+  if (!p) return;
+
+  const inputText = document.getElementById('inputText').value.trim();
+  if (!inputText) {
+    toast('请先输入剧本或小说内容', 'error');
+    return;
+  }
+
+  updateGlobalStatus('正在拆解分镜…', 'processing');
+  document.getElementById('generateBtn').disabled = true;
+
+  try {
+    p.scenes = await extractScenes(inputText, p.mode);
+    p.title = inputText.slice(0, 20) + (inputText.length > 20 ? '…' : '');
+    p.updatedAt = new Date().toISOString();
+    persist();
+    renderStoryList();
+    renderStoryboard();
+    toast(`已拆解 ${p.scenes.length} 个分镜`, 'success');
+    updateGlobalStatus(`${p.scenes.length} 个分镜已生成`, 'done');
+
+    updateGlobalStatus('正在生成视频…', 'processing');
+    const concurrency = 2;
+    for (let i = 0; i < p.scenes.length; i++) {
+      if (p.scenes[i].status === 'pending') {
+        p.scenes[i].status = 'processing';
+        renderStoryboard();
+        try {
+          const videoUrl = await generateSceneVideo(p.scenes[i]);
+          p.scenes[i].status = 'done';
+          p.scenes[i].videoUrl = videoUrl;
+        } catch(err) {
+          p.scenes[i].status = 'error';
+          console.error('生成失败:', err);
+        }
+      }
+      if (i % concurrency === 0 && i > 0) await new Promise(r => setTimeout(r, 300));
+    }
+
+    p.updatedAt = new Date().toISOString();
+    persist();
+    renderStoryboard();
+    updateGlobalStatus('全部完成！', 'done');
+    toast('漫剧生成完成！', 'success');
+  } catch(err) {
+    toast('生成失败：' + err.message, 'error');
+    updateGlobalStatus('出错', '');
+  } finally {
+    document.getElementById('generateBtn').disabled = false;
+  }
+}
+
+async function generateSingle(idx) {
+  const p = projects[activeProjectIdx];
+  const scene = p.scenes[idx];
+  if (!scene || scene.status === 'processing') return;
+
+  scene.status = 'processing';
+  renderStoryboard();
+
+  try {
+    const videoUrl = await generateSceneVideo(scene);
+    scene.status = 'done';
+    scene.videoUrl = videoUrl;
+    persist();
+    renderStoryboard();
+    toast(`分镜 ${idx+1} 生成完成`, 'success');
+  } catch(err) {
+    scene.status = 'error';
+    renderStoryboard();
+    toast('生成失败', 'error');
+  }
+}
+
+function deleteScene(idx) {
+  if (!confirm('确定删除该分镜？')) return;
+  projects[activeProjectIdx].scenes.splice(idx, 1);
+  projects[activeProjectIdx].scenes.forEach((s, i) => s.num = i + 1);
+  persist();
+  renderStoryboard();
+  toast('已删除', 'info');
+}
+
+async function loadFromFile() {
+  const result = await window.electronAPI.readFile();
+  if (result.canceled) return;
+  toast('文件读取功能待接入', 'info');
+}
+
+async function saveProject() {
+  saveCurrentInput();
+  const p = projects[activeProjectIdx];
+  const result = await window.electronAPI.saveFile({
+    fileName: `${p.title || '项目'}.json`,
+    content: JSON.stringify(p, null, 2),
+  });
+  if (!result.canceled) toast('已保存到 ' + result.path, 'success');
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getMonth()+1}月${d.getDate()}日 ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+function statusLabel(status) {
+  const map = { pending:'待生成', processing:'生成中…', done:'已完成', error:'失败' };
+  return map[status] || status;
+}
+function updateGlobalStatus(text, type) {
+  const el = document.getElementById('globalStatus');
+  el.textContent = text;
+  el.className = 'status-badge' + (type ? ' ' + type : '');
+}
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+function openSettings() {
+  showApiConfigDialog();
+}
+
+function showApiConfigDialog() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  `;
+  const maskedKey = API_CONFIG.apiKey ? API_CONFIG.apiKey.slice(0, 8) + '***' + API_CONFIG.apiKey.slice(-4) : '';
+  overlay.innerHTML = `
+    <div style="
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 500px;
+      max-width: 90vw;
+      box-shadow: var(--shadow);
+    ">
+      <h3 style="margin-bottom: 20px; color: var(--text-primary);">⚙️ API 配置</h3>
+      <div class="settings-row">
+        <label>API 端点</label>
+        <input type="text" id="apiEndpoint" value="${API_CONFIG.endpoint}" />
+      </div>
+      <div class="settings-row">
+        <label>API Key</label>
+        <input type="password" id="apiKey" value="${maskedKey}" placeholder="不填写则使用默认" />
+      </div>
+      <div class="settings-row">
+        <label>文本模型</label>
+        <input type="text" id="textModel" value="${API_CONFIG.textModel}" />
+      </div>
+      <div class="settings-row">
+        <label>视频模型</label>
+        <input type="text" id="videoModel" value="${API_CONFIG.videoModel}" />
+      </div>
+      <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted);">
+        💡 不填写 API Key 时使用内置默认配置
+      </div>
+      <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn btn-sm" onclick="this.closest('div[style]').parentElement.remove()">取消</button>
+        <button class="btn btn-accent btn-sm" onclick="saveApiConfigFromDialog()">保存</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
+async function saveApiConfigFromDialog() {
+  const endpoint = document.getElementById('apiEndpoint').value.trim();
+  const apiKeyInput = document.getElementById('apiKey').value.trim();
+  const textModel = document.getElementById('textModel').value.trim();
+  const videoModel = document.getElementById('videoModel').value.trim();
+
+  const apiKey = apiKeyInput || API_CONFIG.apiKey;
+
+  API_CONFIG = {
+    endpoint: endpoint || API_CONFIG.endpoint,
+    apiKey: apiKey,
+    textModel: textModel || API_CONFIG.textModel,
+    videoModel: videoModel || API_CONFIG.videoModel,
+  };
+  await saveApiSettings();
+  toast('API 配置已保存', 'success');
+  document.querySelector('div[style*="position: fixed"]')?.remove();
+}
+
+init();
+</script>
+</body>
+</html>

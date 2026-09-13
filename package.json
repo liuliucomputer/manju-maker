@@ -1,0 +1,15 @@
+{
+  "name": "manju-maker",
+  "version": "1.0.0",
+  "description": "漫剧制作工具 - 剧本模式 & 小说模式",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "electron": "28.3.3"
+  },
+  "devDependencies": {}
+}
