@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const OUT = path.join(ROOT, 'dist', '漫剧制作');
+const OUT = path.join(ROOT, 'dist', '漫剧制作记');
 const ELECTRON_PKG = path.join(ROOT, 'node_modules', 'electron');
 
 console.log('📦 打包漫剧制作工具...');
@@ -136,4 +136,4 @@ totalSize = calcSize(OUT);
 console.log(`\n✅ 打包完成！`);
 console.log(`📂 输出目录: ${OUT}`);
 console.log(`📊 总大小: ${(totalSize / 1024 / 1024).toFixed(1)} MB`);
-console.log(`💡 双击 "启动漫剧制作.bat" 即可运行`);
+console.log(`💡 双击 "启动漫剧制作记.bat" 即可运行`);

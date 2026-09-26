@@ -1,4 +1,4 @@
-// main.js - 漫剧制作工具主进程
+// main.js - 漫剧制作记主进程
 const path = require('path');
 const https = require('https');
 const fs = require('fs');
@@ -13,6 +13,34 @@ const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
 // 加载配置
 let API_CONFIG = {
+  apiUrl: 'https://api.agnes-ai.cn/v1',
+  apiKey: 'sk-C0BS2BvYhjqnWy4k0wuq87QGYddR1cWb6NuxfWwKlkHDrosK',
+  textModel: 'agnes-2.5-flash',
+  videoModel: 'agnes-video-v2.0',
+};
+
+// 从用户配置加载
+try {
+  const configPath = path.join(DATA_DIR, 'config.json');
+  if (fs.existsSync(configPath)) {
+    const saved = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    API_CONFIG = { ...API_CONFIG, ...saved };
+  }
+} catch(e) {}
+
+// ── Fake Electron Fallback ─────────────────────────────────────────────────
+let electron;
+try {
+  electron = require('electron');
+} catch(e) {
+  const EventEmitter = require('events');
+
+  class FakeApp extends EventEmitter {
+    constructor() {
+      super();
+      this._ready = false;
+    }
+    whenReady() {
       return new Promise(r => this.once('ready', r));
     }
     isReady() { return this._ready; }
@@ -98,25 +126,6 @@ let API_CONFIG = {
   };
 } // end catch (e)
 
-// ── 配置 ────────────────────────────────────────────────────────────────────
-let API_CONFIG = {
-  apiUrl: 'https://api.agnes-ai.cn/v1',
-  apiKey: 'sk-C0BS2BvYhjqnWy4k0wuq87QGYddR1cWb6NuxfWwKlkHDrosK',
-  textModel: 'agnes-2.5-flash',
-  videoModel: 'agnes-video-v2.0',
-};
-
-// 从用户配置加载
-try {
-  const fs = require('fs');
-  const path = require('path');
-  const configPath = path.join(require('os').homedir(), '.manju-maker', 'config.json');
-  if (fs.existsSync(configPath)) {
-    const saved = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    API_CONFIG = { ...API_CONFIG, ...saved };
-  }
-} catch(e) {}
-
 const { app, BrowserWindow, ipcMain, dialog } = electron;
 
 let mainWindow;
@@ -128,7 +137,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: '#0a0e1a',
     frame: true,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
@@ -181,22 +190,14 @@ function callLLM({ model, messages, maxTokens = 4096, apiKey, apiUrl }) {
 }
 
 ipcMain.handle('call-llm', async (_event, args) => {
-  const { model, messages, maxTokens = 4096, apiKey, apiUrl } = args;
-  // 如果传入的是小说拆解任务，使用特定提示词
-  const firstMsg = messages?.[0]?.content || '';
-  if (firstMsg.includes('漫剧制作博主') || firstMsg.includes('小说')) {
-    // 保留原有逻辑，但允许自定义提示词
-  }
   return await callLLM(args);
 });
 
 ipcMain.handle('save-file', async (_event, args) => {
-  const fs = require('fs');
   let filePath;
   if (args.filePath) {
     filePath = args.filePath;
   } else {
-    const { dialog } = require('electron');
     const result = await dialog.showSaveDialog({
       title: '保存项目',
       defaultPath: args.fileName || '漫剧项目.json',
@@ -210,7 +211,6 @@ ipcMain.handle('save-file', async (_event, args) => {
 });
 
 ipcMain.handle('read-file', async () => {
-  const fs = require('fs');
   const filePath = path.join(require('os').homedir(), 'manju-work.json');
   if (fs.existsSync(filePath)) {
     return { success: true, content: JSON.parse(fs.readFileSync(filePath, 'utf8')) };
