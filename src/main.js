@@ -353,5 +353,5 @@ ipcMain.handle('save-theme', async (_event, theme) => {
   }
 });
 
-console.log('漫剧制作工具已启动 ✓');
+console.log('漫剧制作记已启动 ✓');
 console.log('数据目录:', DATA_DIR);
