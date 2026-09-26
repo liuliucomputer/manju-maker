@@ -96,14 +96,14 @@ cd /d "%~dp0"
 start "" "electron.exe" "resources\\app"
 exit
 `;
-fs.writeFileSync(path.join(OUT, '启动漫剧制作.bat'), launcherBat, 'utf8');
+fs.writeFileSync(path.join(OUT, '启动漫剧制作记.bat'), launcherBat, 'utf8');
 
 // 创建使用说明
 const readme = `漫剧制作工具 v1.0
 ================
 
 使用方法：
-1. 双击 "启动漫剧制作.bat" 运行
+1. 双击 "启动漫剧制作记.bat" 运行
 2. 选择「剧本模式」或「小说模式」
 3. 输入内容后点击「开始生成」
 
