@@ -38,6 +38,7 @@ AI 驱动的漫剧制作工具，支持剧本模式和小说模式，自动生�
 
 - **框架**：Electron
 - **AI API**：agnes-2.5-flash（文本）+ agnes-video-v2.0（视频）
+- **API 地址**：https://api.agnes-ai.cn/v1
 - **数据存储**：本地 JSON 文件
 
 ## 开发说明

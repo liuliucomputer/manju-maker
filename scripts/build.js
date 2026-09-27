@@ -6,18 +6,18 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const OUT = path.join(ROOT, 'dist', '漫剧制作记');
+const OUT = path.join(ROOT, 'dist', '漫剧制作');
 const ELECTRON_PKG = path.join(ROOT, 'node_modules', 'electron');
 
 console.log('📦 打包漫剧制作工具...');
 
-// 清理旧输出
+// Clean up old output
 if (fs.existsSync(OUT)) {
   fs.rmSync(OUT, { recursive: true, force: true });
   console.log('  ✓ 清理旧输出');
 }
 
-// 创建目录结构
+// Create directory structure
 const dirs = [
   'resources/app/src',
   'locales',
@@ -27,7 +27,7 @@ for (const d of dirs) {
   fs.mkdirSync(path.join(OUT, d), { recursive: true });
 }
 
-// 复制应用文件
+// Copy app files
 const appFiles = [
   ['src/main.js', 'resources/app/src/main.js'],
   ['index.html', 'resources/app/index.html'],
@@ -38,7 +38,7 @@ for (const [src, dst] of appFiles) {
   console.log(`  ✓ ${dst}`);
 }
 
-// 复制 Electron 二进制到根目录
+// Copy Electron binaries to root
 const binFiles = [
   'electron.exe', 'ffmpeg.dll', 'd3dcompiler_47.dll',
   'libEGL.dll', 'libGLESv2.dll', 'icudtl.dat',
@@ -55,7 +55,7 @@ for (const f of binFiles) {
   }
 }
 
-// 复制 locales
+// Copy locales
 const localesSrc = path.join(ELECTRON_PKG, 'locales');
 if (fs.existsSync(localesSrc)) {
   const localesDst = path.join(OUT, 'locales');
@@ -63,13 +63,13 @@ if (fs.existsSync(localesSrc)) {
   console.log('  ✓ locales/');
 }
 
-// 复制 resources（含 default_app.asar）
+// Copy resources (including default_app.asar)
 const resSrc = path.join(ELECTRON_PKG, 'resources');
 const resDst = path.join(OUT, 'resources');
 execSync(`xcopy /E /I /Q "${resSrc}" "${resDst}"`, { stdio: 'inherit' });
 console.log('  ✓ resources/');
 
-// 复制 electron.exe 到 app/node_modules/electron/dist
+// Copy electron.exe to app/node_modules/electron/dist
 const exeSrc = path.join(ELECTRON_PKG, 'electron.exe');
 const exeDst = path.join(OUT, 'resources', 'app', 'node_modules', 'electron', 'dist', 'electron.exe');
 if (fs.existsSync(exeSrc)) {
@@ -77,10 +77,9 @@ if (fs.existsSync(exeSrc)) {
   console.log('  ✓ resources/app/node_modules/electron/dist/electron.exe');
 }
 
-// 创建 electron stub - 返回空对象，让 main.js 使用 fallback
+// Create electron stub - returns empty object, triggers main.js fallback logic
 const stubDir = path.join(OUT, 'resources', 'app', 'node_modules', 'electron');
 fs.writeFileSync(path.join(stubDir, 'path.txt'), 'electron', 'utf8');
-// 关键：返回空对象，触发 main.js 中的 fallback 逻辑
 fs.writeFileSync(path.join(stubDir, 'index.js'), `
 module.exports = {};
 `, 'utf8');
@@ -89,7 +88,33 @@ fs.writeFileSync(path.join(stubDir, 'package.json'), JSON.stringify({
 }, null, 2), 'utf8');
 console.log('  ✓ electron stub (empty object)');
 
-// 生成启动 BAT
+// Replace icon in electron.exe using IconReplacer tool
+const icoPath = path.join(ROOT, 'dist', '漫剧制作', 'app.ico');
+if (fs.existsSync(icoPath)) {
+  const iconReplacerPath = path.join(__dirname, 'IconReplacer.exe');
+  try {
+    execSync(`"${iconReplacerPath}" "${path.join(OUT, 'electron.exe')}" "${icoPath}"`, { stdio: 'inherit' });
+    console.log('  ✓ Icon replaced');
+  } catch (e) {
+    console.log('  ⚠ Icon replacement failed (non-critical)');
+  }
+}
+
+// Copy platforms/Windows documentation into dist
+const platformsSrc = path.join(ROOT, 'platforms', 'Windows');
+if (fs.existsSync(platformsSrc)) {
+  const files = fs.readdirSync(platformsSrc);
+  for (const f of files) {
+    const srcFile = path.join(platformsSrc, f);
+    const dstFile = path.join(OUT, f);
+    if (fs.statSync(srcFile).isFile()) {
+      fs.copyFileSync(srcFile, dstFile);
+      console.log(`  ✓ ${f} (from platforms/Windows)`);
+    }
+  }
+}
+
+// Generate launch BAT (always regenerate to ensure consistency)
 const launcherBat = `@echo off
 chcp 65001 >nul
 cd /d "%~dp0"
@@ -97,30 +122,9 @@ start "" "electron.exe" "resources\\app"
 exit
 `;
 fs.writeFileSync(path.join(OUT, '启动漫剧制作记.bat'), launcherBat, 'utf8');
+console.log('  ✓ 启动漫剧制作记.bat');
 
-// 创建使用说明
-const readme = `漫剧制作工具 v1.0
-================
-
-使用方法：
-1. 双击 "启动漫剧制作记.bat" 运行
-2. 选择「剧本模式」或「小说模式」
-3. 输入内容后点击「开始生成」
-
-功能：
-- 剧本模式：输入剧本 → AI 拆解分镜 → 生成视频
-- 小说模式：输入小说 → AI 提取场景 → 生成视频
-
-AI 模型：
-- 文本分镜：agnes-2.5-flash
-- 视频生成：agnes-video-v2.0
-- API：https://api.agnes-ai.cn/v1
-
-大小：约 230 MB（含 Electron 运行时）
-`;
-fs.writeFileSync(path.join(OUT, '使用说明.txt'), readme, 'utf8');
-
-// 计算总大小
+// Calculate total size
 let totalSize = 0;
 function calcSize(dir) {
   let size = 0;

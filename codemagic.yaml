@@ -1,0 +1,10 @@
+version: 1.2.0
+buildNumber: 1200
+name: "漫剧制作记"
+bundleId: com.liuliu.manjufactory
+builder: native
+
+ios:
+  scheme: "漫剧制作记"
+  configuration: Release
+  destination: platform

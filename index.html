@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -542,10 +542,10 @@ let projects     = [];
 let activeProjectIdx = 0;
 
 let API_CONFIG = {
-  endpoint: 'https://api.agnes-ai.cn/v1',
-  apiKey: 'sk-C0BS2BvYhjqnWy4k0wuq87QGYddR1cWb6NuxfWwKlkHDrosK',
-  textModel: 'agnes-2.5-flash',
-  videoModel: 'agnes-video-v2.0',
+  endpoint: '',
+  apiKey: '',
+  textModel: '',
+  videoModel: '',
 };
 
 function loadApiSettings() {
@@ -784,7 +784,12 @@ async function extractScenes(inputText, mode) {
 }
 
 async function generateSceneVideo(scene) {
-  const resp = await window.electronAPI.generateVideo({ prompt: scene.prompt });
+  const resp = await window.electronAPI.generateVideo({
+    prompt: scene.prompt,
+    size: scene.settings?.size || '720P',
+    aspectRatio: scene.settings?.aspectRatio || '16:9',
+    seconds: scene.settings?.seconds || '5',
+  });
   if (resp.error) throw new Error(resp.error);
   return resp.videoUrl || resp.url || null;
 }
@@ -931,7 +936,7 @@ function showApiConfigDialog() {
     background: rgba(0,0,0,0.7); z-index: 1000;
     display: flex; align-items: center; justify-content: center;
   `;
-  const maskedKey = API_CONFIG.apiKey ? API_CONFIG.apiKey.slice(0, 8) + '***' + API_CONFIG.apiKey.slice(-4) : '';
+  const maskedKey = API_CONFIG.apiKey ? API_CONFIG.apiKey.slice(0, 8) + '***' + API_CONFIG.apiKey.slice(-4) : '（未配置）';
   overlay.innerHTML = `
     <div style="
       background: var(--bg-secondary);
@@ -945,22 +950,22 @@ function showApiConfigDialog() {
       <h3 style="margin-bottom: 20px; color: var(--text-primary);">⚙️ API 配置</h3>
       <div class="settings-row">
         <label>API 端点</label>
-        <input type="text" id="apiEndpoint" value="${API_CONFIG.endpoint}" />
+        <input type="text" id="apiEndpoint" value="${API_CONFIG.endpoint || ""}" placeholder="https://api.agnes-ai.cn/v1" />
       </div>
       <div class="settings-row">
         <label>API Key</label>
-        <input type="password" id="apiKey" value="${maskedKey}" placeholder="不填写则使用默认" />
+        <input type="password" id="apiKey" value="${maskedKey}" placeholder="输入 API Key" />
       </div>
       <div class="settings-row">
         <label>文本模型</label>
-        <input type="text" id="textModel" value="${API_CONFIG.textModel}" />
+        <input type="text" id="textModel" value="${API_CONFIG.textModel || ""}" placeholder="agnes-2.5-flash" />
       </div>
       <div class="settings-row">
         <label>视频模型</label>
-        <input type="text" id="videoModel" value="${API_CONFIG.videoModel}" />
+        <input type="text" id="videoModel" value="${API_CONFIG.videoModel || ""}" placeholder="agnes-video-v2.0" />
       </div>
       <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted);">
-        💡 不填写 API Key 时使用内置默认配置
+        💡 所有配置均为空，请在下方填写后保存
       </div>
       <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
         <button class="btn btn-sm" onclick="this.closest('div[style]').parentElement.remove()">取消</button>
@@ -980,7 +985,7 @@ async function saveApiConfigFromDialog() {
   const textModel = document.getElementById('textModel').value.trim();
   const videoModel = document.getElementById('videoModel').value.trim();
 
-  const apiKey = apiKeyInput || API_CONFIG.apiKey;
+  const apiKey = apiKeyInput || (API_CONFIG.apiKey ? API_CONFIG.apiKey : "");
 
   API_CONFIG = {
     endpoint: endpoint || API_CONFIG.endpoint,

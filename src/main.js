@@ -14,9 +14,9 @@ const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 // 加载配置
 let API_CONFIG = {
   apiUrl: 'https://api.agnes-ai.cn/v1',
-  apiKey: 'sk-C0BS2BvYhjqnWy4k0wuq87QGYddR1cWb6NuxfWwKlkHDrosK',
+  apiKey: 'sk-Jklyftr1Jbtnyim9rTn6wroE5PUx4v2oK2JPnyJQqvpPlFum',
   textModel: 'agnes-2.5-flash',
-  videoModel: 'agnes-video-v2.0',
+  videoModel: 'agnes-video-2.5-flash',
 };
 
 // 从用户配置加载
@@ -137,7 +137,8 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    backgroundColor: '#0a0e1a',
+    transparent: true,
+    backgroundColor: '#00000000',
     frame: true,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
@@ -145,6 +146,7 @@ function createWindow() {
       contextIsolation: false,
     },
   });
+  mainWindow.setOpacity(0.92);
   mainWindow.loadFile(path.join(__dirname, '../index.html'));
 }
 
@@ -237,21 +239,20 @@ async function fetchWithTimeout(url, options, timeout = 60000) {
 }
 
 ipcMain.handle('generate-video', async (_event, args) => {
-  const { prompt, width = 1152, height = 768, numFrames = 121, frameRate = 24, image, model, apiKey, endpoint } = args;
+  const { prompt, size = '720P', aspectRatio = '16:9', seconds = '5', model, apiKey, endpoint } = args;
 
   const api = apiKey || API_CONFIG.apiKey;
   const videoApiUrl = (endpoint || API_CONFIG.apiUrl).replace(/\/$/, '');
   const videoModel = model || API_CONFIG.videoModel;
 
-  // Step 1: 提交视频生成任务
+  // Step 1: 提交视频生成任务（V2.5 API）
   const submitBody = JSON.stringify({
     model: videoModel,
     prompt,
-    width,
-    height,
-    num_frames: numFrames,
-    frame_rate: frameRate,
-    ...(image ? { image } : {}),
+    mode: 'text',
+    seconds: seconds,
+    size: size,
+    aspect_ratio: aspectRatio,
   });
 
   let videoId;
@@ -271,18 +272,18 @@ ipcMain.handle('generate-video', async (_event, args) => {
     if (res.status !== 200 && res.status !== 201) {
       return { error: `提交失败 (${res.status}): ${JSON.stringify(res.body)}` };
     }
-    videoId = res.body.id || res.body.video_id;
+    videoId = res.body.video_id || res.body.id;
     if (!videoId) return { error: '未返回 video_id: ' + JSON.stringify(res.body) };
   } catch (e) {
     return { error: `提交视频任务失败: ${e.message}` };
   }
 
-  // Step 2: 轮询等待结果
+  // Step 2: 轮询等待结果（带 model_name 参数）
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 5000));
     try {
       const res = await fetchWithTimeout(
-        `${videoApiUrl}/agnesapi?video_id=${videoId}`,
+        `${videoApiUrl}/agnesapi?video_id=${videoId}&model_name=${videoModel}`,
         {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${api}` },
@@ -291,8 +292,8 @@ ipcMain.handle('generate-video', async (_event, args) => {
       );
       if (res.status === 200) {
         const data = res.body;
-        if (data.status === 'completed' || data.video_url) {
-          return { videoUrl: data.video_url || data.url || data.video };
+        if (data.status === 'completed') {
+          return { videoUrl: data.metadata?.url || data.url };
         }
         if (data.status === 'failed' || data.error) {
           return { error: `视频生成失败: ${JSON.stringify(data.error || data)}` };

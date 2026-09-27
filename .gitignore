@@ -49,4 +49,12 @@ coverage/
 # Electron builder
 electron-builder*
 
-# 注意：用户数据存储在 ~/.manju-maker/ 目录（系统目录），不会提交到仓库
+# Python cache
+**/__pycache__/
+**/*.pyc
+
+# Capacitor iOS build artifacts
+ios/App/App/build/
+
+# Notes
+# User data is stored in ~/.manju-maker/ (system directory), not committed to repo

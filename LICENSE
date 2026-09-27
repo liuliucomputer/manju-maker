@@ -1,0 +1,33 @@
+MIT License (Modified - 保留权利声明)
+
+Copyright (c) 2026 liuliucomputer
+
+本作品基于 MIT License 开源，但附加以下保留权利声明：
+
+=== 使用条件 ===
+
+1. 你可以自由地使用、复制、修改和分发本项目的代码（包括用于商业目的）。
+
+2. 你必须在你的项目副本中保留本许可证文件（LICENSE）。
+
+3. 你必须在你的项目根目录的 README.md 文件顶部添加以下声明（原文或等价表述）：
+
+   > 本项目是基于 liuliucomputer 开发的 [manju-maker](https://github.com/liuliucomputer/manju-maker) 项目的 Fork。
+   > 感谢原作者 liuliucomputer 的开源工作。
+
+4. 如果你修改了本项目代码，请在 README.md 中注明主要修改内容。
+
+=== 免责声明 ===
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+=== 联系 ===
+
+原作者: liuliucomputer
+仓库: https://github.com/liuliucomputer/manju-maker

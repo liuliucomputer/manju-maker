@@ -1,0 +1,8 @@
+{
+  "name": "com.liuliu.manjufactory",
+  "displayName": "漫剧制作",
+  "version": "1.2.0",
+  "main": "index.html",
+  "description": "漫剧制作记 - 剧本模式 & 小说模式",
+  "platforms": ["android", "ios"]
+}
